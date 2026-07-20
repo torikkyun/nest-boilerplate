@@ -1,0 +1,29 @@
+services:
+  boilerplate_database:
+    image: mysql:8.0.34
+    container_name: boilerplate_database
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DATABASE_DB:-boilerplate}
+    ports:
+      - "127.0.0.1:${DATABASE_PORT:-3307}:3306"
+    volumes:
+      - boilerplate_database_data:/var/lib/mysql
+    networks:
+      - boilerplate_backend
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  boilerplate_database_data:
+    name: boilerplate_database_data
+
+networks:
+  boilerplate_backend:
+    name: boilerplate_backend
+    driver: bridge

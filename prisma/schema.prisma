@@ -1,0 +1,120 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model Staff {
+  id           String @id @default(uuid()) @db.Char(36)
+  name         String
+  avatarUrl    String @map("avatar_url")
+  email        String
+  phone        String
+  passwordHash String @map("password_hash")
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  departmentId String     @map("department_id") @db.Char(36)
+  department   Department @relation(fields: [departmentId], references: [id])
+
+  StaffRoles       StaffRole[]
+  GrantedRoles     StaffRole[]       @relation("GrantedBy")
+  StaffPermissions StaffPermission[]
+
+  @@map("staffs")
+}
+
+model Role {
+  id          String  @id @default(uuid()) @db.Char(36)
+  roleCode    String  @map("role_code")
+  roleName    String  @map("role_name")
+  description String?
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  parentRoleId String? @map("parent_role_id") @db.Char(36)
+  parentRole   Role?   @relation("RoleHierarchy", fields: [parentRoleId], references: [id])
+
+  childRoles      Role[]           @relation("RoleHierarchy")
+  StaffRoles      StaffRole[]
+  RolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model StaffRole {
+  validFrom DateTime  @map("valid_from") @db.Date
+  validTo   DateTime? @map("valid_to") @db.Date
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  staffId          String @map("staff_id") @db.Char(36)
+  staff            Staff  @relation(fields: [staffId], references: [id])
+  roleId           String @map("role_id") @db.Char(36)
+  role             Role   @relation(fields: [roleId], references: [id])
+  grantedByStaffId String @map("granted_by_staff_id") @db.Char(36)
+  grantedByStaff   Staff  @relation("GrantedBy", fields: [grantedByStaffId], references: [id])
+
+  @@id([staffId, roleId, validFrom])
+  @@map("staff_roles")
+}
+
+model Permission {
+  id           String @id @default(uuid()) @db.Char(36)
+  actionCode   String @map("action_code")
+  actionName   String @map("action_name")
+  resourceCode String @map("resource_code")
+  resourceName String @map("resource_name")
+
+  StaffPermissions StaffPermission[]
+  RolePermissions  RolePermission[]
+
+  @@map("permissions")
+}
+
+model StaffPermission {
+  effect    String
+  validFrom DateTime? @map("valid_from")
+  validTo   DateTime? @map("valid_to")
+
+  staffId      String     @map("staff_id") @db.Char(36)
+  staff        Staff      @relation(fields: [staffId], references: [id])
+  permissionId String     @map("permission_id") @db.Char(36)
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([staffId, permissionId])
+  @@map("staff_permissions")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id") @db.Char(36)
+  role         Role       @relation(fields: [roleId], references: [id])
+  permissionId String     @map("permission_id") @db.Char(36)
+  permission   Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Department {
+  id   String @id @default(uuid()) @db.Char(36)
+  name String
+
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  staffs Staff[]
+
+  @@map("departments")
+}

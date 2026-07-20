@@ -1,0 +1,28 @@
+services:
+  database_test:
+    image: mysql:8.0.34
+    container_name: database_test
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DATABASE_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DATABASE_DB:-ccnta_test}
+    ports:
+      - "127.0.0.1:${DATABASE_PORT:-3308}:3306"
+    volumes:
+      - database_test_data:/var/lib/mysql
+    networks:
+      - backend_test
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  database_test_data:
+    name: database_test_data
+
+networks:
+  backend_test:
+    name: backend_test

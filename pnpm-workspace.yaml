@@ -1,0 +1,5 @@
+allowBuilds:
+  '@prisma/engines': set this to true or false
+  '@scarf/scarf': true
+  '@swc/core': true
+  prisma: set this to true or false
